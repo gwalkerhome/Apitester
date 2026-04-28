@@ -217,10 +217,19 @@ border: 1px solid var(–border);
 background: var(–surface2);
 border: 1px solid var(–border);
 border-radius: var(–radius);
-max-height: 220px;
+min-height: 120px;
+max-height: 320px;
 overflow-y: auto;
 font-family: var(–mono);
 font-size: 11px;
+}
+
+.mlb-placeholder {
+padding: 30px 14px;
+text-align: center;
+color: var(–muted);
+font-size: 11px;
+font-style: italic;
 }
 
 .model-list-box .mlb-header {
@@ -513,13 +522,11 @@ line-height: 1.6;
   <div class="card-label">Available Models</div>
   <div class="input-row">
     <button class="btn-list" id="gemini-list-btn" onclick="listModels('gemini')">⟳ Fetch Model List</button>
+    <button class="btn-save" onclick="useSelected('gemini')">Use selected →</button>
   </div>
-  <div id="gemini-model-list-box" style="display:none" class="model-list-box">
-    <div class="mlb-header">
-      <span id="gemini-model-count">0 models</span>
-      <button onclick="useSelected('gemini')">Use selected →</button>
-    </div>
-    <div id="gemini-model-items"></div>
+  <div id="gemini-model-list-box" class="model-list-box">
+    <div class="mlb-header"><span id="gemini-model-count">Click "Fetch Model List" to load</span></div>
+    <div id="gemini-model-items"><div class="mlb-placeholder">No models loaded yet</div></div>
   </div>
 </div>
 
@@ -572,13 +579,11 @@ line-height: 1.6;
   <div class="card-label">Available Models</div>
   <div class="input-row">
     <button class="btn-list" id="openai-list-btn" onclick="listModels('openai')">⟳ Fetch Model List</button>
+    <button class="btn-save" onclick="useSelected('openai')">Use selected →</button>
   </div>
-  <div id="openai-model-list-box" style="display:none" class="model-list-box">
-    <div class="mlb-header">
-      <span id="openai-model-count">0 models</span>
-      <button onclick="useSelected('openai')">Use selected →</button>
-    </div>
-    <div id="openai-model-items"></div>
+  <div id="openai-model-list-box" class="model-list-box">
+    <div class="mlb-header"><span id="openai-model-count">Click "Fetch Model List" to load</span></div>
+    <div id="openai-model-items"><div class="mlb-placeholder">No models loaded yet</div></div>
   </div>
 </div>
 
@@ -767,7 +772,81 @@ async function testGeminiModel(key, model, prompt) {
   }
 }
 
-// ─── OPENAI ─────────────────────────────────────────────────────────────────
+// ─── List Models ────────────────────────────────────────────────────────────
+function tagModel(id) {
+  const s = id.toLowerCase();
+  if (s.includes('imagen') || s.includes('dall-e') || s.includes('dalle')) return 'image';
+  if (s.includes('embed') || s.includes('embedding')) return 'embed';
+  return 'chat';
+}
+
+async function listModels(provider) {
+  const key = getKey(provider) || document.getElementById(`${provider}-key`).value.trim();
+  if (!key) { alert(`Please enter and save your ${provider === 'gemini' ? 'Gemini' : 'OpenAI'} API key first.`); return; }
+
+  const btn = document.getElementById(`${provider}-list-btn`);
+  const box = document.getElementById(`${provider}-model-list-box`);
+  const items = document.getElementById(`${provider}-model-items`);
+  const countEl = document.getElementById(`${provider}-model-count`);
+
+  btn.disabled = true;
+  btn.textContent = '⟳ Fetching…';
+  box.style.display = 'block';
+  items.innerHTML = `<div class="mlb-loading"><span class="spinner"></span> Loading models…</div>`;
+
+  try {
+    let models = [];
+
+    if (provider === 'gemini') {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`
+      );
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error?.message || JSON.stringify(data));
+      models = (data.models || []).map(m => ({
+        id: m.name.replace('models/', ''),
+        tag: tagModel(m.name)
+      }));
+    } else {
+      const resp = await fetch('https://api.openai.com/v1/models', {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error?.message || JSON.stringify(data));
+      models = (data.data || [])
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map(m => ({ id: m.id, tag: tagModel(m.id) }));
+    }
+
+    countEl.textContent = `${models.length} models — check boxes then click "Use selected →"`;
+    items.innerHTML = '';
+
+    models.forEach(m => {
+      const row = document.createElement('label');
+      row.className = 'model-list-item';
+      row.innerHTML = `
+        <input type="checkbox" class="${provider}-model-cb" value="${m.id}" />
+        <span class="mli-name">${m.id}</span>
+        <span class="mli-tag ${m.tag}">${m.tag}</span>
+      `;
+      items.appendChild(row);
+    });
+
+  } catch (err) {
+    items.innerHTML = `<div class="mlb-error">Error: ${escHtml(err.message)}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⟳ Refresh List';
+}
+
+function useSelected(provider) {
+  const checked = [...document.querySelectorAll(`.${provider}-model-cb:checked`)]
+    .map(cb => cb.value);
+  if (!checked.length) { alert('Check at least one model first.'); return; }
+  document.getElementById(`${provider}-models`).value = checked.join('\n');
+}
+
 async function runOpenAI() {
   const key = getKey('openai') || document.getElementById('openai-key').value.trim();
   if (!key) { alert('Please enter and save your OpenAI API key first.'); return; }
