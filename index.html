@@ -731,46 +731,59 @@ async function convert() {
     setSpinner('Step 1 of 3: Analysing worksheet…', 'Vision model is reading layout, text and images');
     log('→ Sending worksheet to ' + visionModel + '…', 'info');
 
-    const analysisPrompt = `You are an expert at converting classroom worksheets into HTML/CSS web pages.
+    const analysisPrompt = `You are a precise document transcription system. Your ONLY job is to read this worksheet image and transcribe EXACTLY what you see into a JSON structure. Do NOT summarise, invent, generalise, or use placeholder text. Every word on the page must be captured verbatim.
 
-Analyse this worksheet image carefully and return a detailed JSON object describing:
-1. The overall layout (columns, sections, title, header style)
-2. All text content (titles, instructions, labels, questions, answers)
-3. Every image/illustration present — describe each one in rich detail suitable for DALL-E image generation (subject, style, colours, composition)
-4. Colours used (background, borders, text colours)
-5. Any fill-in-the-blank boxes, checkboxes, or interactive elements
+TRANSCRIPTION RULES:
+1. Copy ALL text EXACTLY as written - every word, number, punctuation mark, spelling mistake included
+2. Record exact hex colours by sampling the image
+3. Record exact font characteristics (size relative, weight, style) as you see them
+4. For every image/diagram/chart/illustration: describe it in forensic detail - colours, shapes, labels, values, proportions, style
+5. NEVER use placeholder text like "Worksheet Title" or "Part 1" - use the REAL text from the image
+6. If you cannot read something clearly, write "[unclear]" - do NOT guess or substitute
 
-Return ONLY valid JSON in this exact structure:
+Return ONLY valid JSON, no markdown fences:
 {
-  "title": "worksheet title",
-  "subject": "e.g. Science / English / Maths",
-  "ageGroup": "e.g. Year 3 / Age 8-9",
-  "layout": "description of overall layout",
-  "backgroundColor": "#hex",
-  "accentColor": "#hex",
-  "fontStyle": "description e.g. child-friendly, handwritten, clean sans-serif",
+  "title": "EXACT title text as it appears on the page",
+  "subject": "subject if visible, else null",
+  "ageGroup": "age/year group if visible, else null",
+  "pageBackground": "#hex colour of page background",
+  "pageWidth": "portrait or landscape",
+  "fonts": {
+    "heading": "description e.g. dark navy bold sans-serif large",
+    "body": "description e.g. black regular serif small"
+  },
   "sections": [
     {
-      "type": "header|text|image|question|table|fillblank|labeldiagram",
-      "content": "text content if applicable",
-      "imagePrompt": "detailed DALL-E prompt if this section contains an image",
-      "imageStyle": "illustration style e.g. 'flat cartoon', 'colourful diagram', 'realistic photo'",
-      "imagePosition": "left|right|center|top|bottom",
-      "imageSize": "small|medium|large",
-      "subSections": []
+      "order": 1,
+      "type": "title|heading|subheading|instruction|body-text|image|diagram|chart|table|fill-blank|multiple-choice|checkbox-list|label-diagram|blank-box",
+      "exactText": "VERBATIM text copied character by character - do not paraphrase",
+      "textColor": "#hex",
+      "backgroundColor": "#hex or transparent",
+      "fontSize": "large|medium|small",
+      "fontWeight": "bold|normal",
+      "textAlign": "left|center|right",
+      "layout": "full-width|left-column|right-column|two-column",
+      "border": "e.g. 2px solid #333 or none",
+      "blankFields": ["describe each blank input field needed"],
+      "imageId": "img1 if this section contains or references an image",
+      "notes": "any other positioning or style notes"
     }
   ],
   "images": [
     {
       "id": "img1",
-      "description": "what the image shows",
-      "dallePrompt": "detailed generation prompt — be specific about style, colours, composition. End with: educational worksheet illustration, clean white background, child-friendly",
-      "size": "small|medium|large",
-      "position": "description of where it sits in the layout"
+      "type": "diagram|chart|illustration|photo|icon",
+      "positionInLayout": "exact description of where it sits on the page",
+      "widthPercent": 50,
+      "forensicDescription": "EXHAUSTIVE description: every colour, every label, every value, every shape, proportions, style. Enough to recreate it exactly.",
+      "dallePrompt": "Detailed DALL-E prompt to recreate this image exactly. Specify: all colours, all text/labels visible in the image, shapes, composition, style (flat diagram/cartoon/chart etc), white background.",
+      "backgroundColor": "#hex of image container background",
+      "hasBorder": true,
+      "borderStyle": "description of border"
     }
   ]
 }
-${extras ? '\nAdditional context from user: ' + extras : ''}`;
+${extras ? "\nAdditional user context: " + extras : ""}`;
 
     const analysisResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -871,36 +884,47 @@ ${extras ? '\nAdditional context from user: ' + extras : ''}`;
       }));
     }
 
-    const htmlPrompt = `You are an expert HTML/CSS developer specialising in educational worksheets.
+    const htmlPrompt = `You are a pixel-precise HTML/CSS developer. Your job is to produce an HTML page that is as close to a photocopy of the original worksheet as possible.
 
-Using the worksheet analysis below, generate a complete, self-contained HTML page that faithfully reproduces the worksheet.
+STRICT RULES - DO NOT DEVIATE:
+1. Use ONLY the exact text from the analysis. Copy every word verbatim. Do not reword, rename or add anything.
+2. Reproduce the EXACT visual layout - column widths, section order, spacing, alignment
+3. Match colours EXACTLY using the hex values from the analysis
+4. Match font weights, sizes and styles as described
+5. For sections with imageId, place <img src="__IMAGE_imgX__"> using the exact id from the images array. Do not alter the token.
+6. If an image src is null, render a bordered placeholder box at the correct size with the forensicDescription as small grey text inside
+7. Blank input fields must use <input type="text"> styled with only a bottom border (no box), matching the original underline style
+8. Reproduce tables, checkbox lists, label diagrams exactly as described
+9. Do NOT add headers, footers, branding, or ANY content not in the analysis
+10. Page should be white background, A4 proportions (794px wide max), centered, with appropriate padding
+11. Single <style> block, no external CSS, Google Fonts allowed for font matching
+12. Every section must appear in the EXACT order listed in the analysis
 
-RULES:
-- Single HTML file with all CSS inline in <style> tags, no external dependencies except Google Fonts
-- Reproduce the EXACT layout, structure, and content from the analysis
-- Match the colour scheme, font style, and overall aesthetic
-- For each image in the images array where src looks like "__IMAGE_img1__", place an img tag using that EXACT token as the src, e.g. <img src="__IMAGE_img1__" ...>. Do NOT alter or replace these tokens.
-- If an image src is null, render a styled placeholder div showing the image description
-- Include all text, labels, questions, fill-in-the-blank boxes, instructions
-- Render fill-in-the-blank gaps as <input type="text"> fields with dotted underline styling
-- Make it look like a real printed worksheet: clean, structured, professional
-- Add a small grey footer: Generated by Worksheet Converter
-- Print-ready: A4 proportions, sensible @media print styles
-- Use child-friendly Google Fonts that match the original style
-- DO NOT invent content that was not in the original worksheet
+THIS IS A TRANSCRIPTION TASK, NOT A CREATIVE TASK. The output must look identical to the input image.
 
 WORKSHEET ANALYSIS:
 \${JSON.stringify(analysisForPrompt, null, 2)}
 
-Return ONLY the complete HTML. No explanation, no markdown fences. Start with <!DOCTYPE html>`;
+Return ONLY raw HTML starting with <!DOCTYPE html>. No explanation. No markdown. No commentary.`;
 
     const htmlResp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({
         model: visionModel,
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: htmlPrompt }]
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: `data:${fileMime};base64,${fileBase64}`, detail: 'high' }
+              },
+              { type: 'text', text: htmlPrompt }
+            ]
+          }
+        ]
       })
     });
 
