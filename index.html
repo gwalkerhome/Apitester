@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worksheet → Web Page Converter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Mono:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+–bg: #f7f5f0;
+–surface: #ffffff;
+–surface2: #f0ede6;
+–border: #ddd8ce;
+–accent: #e8622a;
+–accent2: #3a7bd5;
+–accent3: #2eab6f;
+–text: #1e1c18;
+–muted: #8a8378;
+–mono: ‘DM Mono’, monospace;
+–hand: ‘Architects Daughter’, cursive;
+–sans: ‘Nunito’, sans-serif;
+–radius: 10px;
+–shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: var(–sans);
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
+
+/* Subtle grid background */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(58,123,213,0.04) 1px, transparent 1px),
+linear-gradient(90deg, rgba(58,123,213,0.04) 1px, transparent 1px);
+background-size: 28px 28px;
+pointer-events: none;
+z-index: 0;
+}
+
+header {
+position: relative;
+z-index: 1;
+background: var(–surface);
+border-bottom: 2px solid var(–border);
+padding: 16px 32px;
+display: flex;
+align-items: center;
+gap: 16px;
+box-shadow: var(–shadow);
+}
+
+.header-icon {
+width: 42px;
+height: 42px;
+background: var(–accent);
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 22px;
+flex-shrink: 0;
+box-shadow: 3px 3px 0 rgba(0,0,0,0.12);
+}
+
+.header-text h1 {
+font-size: 18px;
+font-weight: 800;
+color: var(–text);
+}
+
+.header-text p {
+font-size: 12px;
+color: var(–muted);
+margin-top: 2px;
+}
+
+.header-badge {
+margin-left: auto;
+font-family: var(–mono);
+font-size: 10px;
+padding: 4px 10px;
+border-radius: 20px;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–muted);
+letter-spacing: 0.06em;
+text-transform: uppercase;
+}
+
+main {
+position: relative;
+z-index: 1;
+flex: 1;
+display: grid;
+grid-template-columns: 360px 1fr;
+gap: 0;
+min-height: 0;
+}
+
+/* LEFT PANEL */
+.left-panel {
+background: var(–surface);
+border-right: 2px solid var(–border);
+padding: 24px 20px;
+display: flex;
+flex-direction: column;
+gap: 20px;
+overflow-y: auto;
+}
+
+.section-title {
+font-size: 10px;
+font-family: var(–mono);
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–muted);
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.section-title::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+.card {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: var(–radius);
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+box-shadow: var(–shadow);
+}
+
+.card-label {
+font-size: 12px;
+font-weight: 700;
+color: var(–text);
+}
+
+.card-hint {
+font-size: 11px;
+color: var(–muted);
+line-height: 1.5;
+}
+
+/* Upload zone */
+.upload-zone {
+border: 2px dashed var(–border);
+border-radius: var(–radius);
+padding: 28px 16px;
+text-align: center;
+cursor: pointer;
+transition: all 0.2s;
+background: var(–surface2);
+position: relative;
+}
+
+.upload-zone:hover, .upload-zone.drag-over {
+border-color: var(–accent);
+background: #fff5f1;
+}
+
+.upload-zone input[type=“file”] {
+position: absolute;
+inset: 0;
+opacity: 0;
+cursor: pointer;
+width: 100%;
+height: 100%;
+}
+
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+
+.upload-zone .upload-label {
+font-size: 13px;
+font-weight: 700;
+color: var(–text);
+}
+
+.upload-zone .upload-sub {
+font-size: 11px;
+color: var(–muted);
+margin-top: 4px;
+}
+
+.preview-thumb {
+width: 100%;
+border-radius: 6px;
+border: 1.5px solid var(–border);
+display: none;
+max-height: 200px;
+object-fit: contain;
+background: var(–surface2);
+}
+
+/* Key input */
+input[type=“password”], input[type=“text”], textarea, select {
+width: 100%;
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 8px;
+color: var(–text);
+font-family: var(–mono);
+font-size: 12px;
+padding: 10px 12px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+border-color: var(–accent2);
+}
+
+textarea { min-height: 72px; resize: vertical; line-height: 1.5; }
+
+select {
+cursor: pointer;
+appearance: none;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘12’ viewBox=‘0 0 12 12’%3E%3Cpath fill=’%238a8378’ d=‘M6 8L1 3h10z’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-position: right 12px center;
+padding-right: 32px;
+}
+
+button {
+font-family: var(–sans);
+font-size: 13px;
+font-weight: 700;
+padding: 11px 18px;
+border: none;
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.15s;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+}
+
+.btn-primary {
+background: var(–accent);
+color: #fff;
+width: 100%;
+font-size: 14px;
+padding: 13px;
+border-radius: var(–radius);
+box-shadow: 0 4px 0 #b84a1a;
+transition: all 0.12s;
+}
+
+.btn-primary:hover:not(:disabled) {
+transform: translateY(-1px);
+box-shadow: 0 5px 0 #b84a1a;
+}
+
+.btn-primary:active:not(:disabled) {
+transform: translateY(2px);
+box-shadow: 0 2px 0 #b84a1a;
+}
+
+.btn-primary:disabled {
+opacity: 0.45;
+cursor: not-allowed;
+box-shadow: none;
+}
+
+.btn-secondary {
+background: var(–surface2);
+color: var(–text);
+border: 1.5px solid var(–border);
+font-size: 12px;
+padding: 8px 14px;
+}
+
+.btn-secondary:hover { background: var(–border); }
+
+.key-row {
+display: flex;
+gap: 8px;
+}
+
+.key-row input { flex: 1; }
+.key-row button { flex-shrink: 0; font-size: 11px; padding: 8px 12px; }
+
+.key-saved {
+font-size: 10px;
+font-family: var(–mono);
+color: var(–accent3);
+display: flex;
+align-items: center;
+gap: 5px;
+}
+.key-saved::before { content: ‘✓’; font-weight: 700; }
+
+/* Progress log */
+.log-box {
+background: #1a1a1f;
+border-radius: 8px;
+padding: 12px;
+font-family: var(–mono);
+font-size: 11px;
+min-height: 80px;
+max-height: 160px;
+overflow-y: auto;
+line-height: 1.8;
+color: #888;
+}
+
+.log-box .log-line { display: block; }
+.log-box .log-ok   { color: #2eab6f; }
+.log-box .log-err  { color: #e8622a; }
+.log-box .log-info { color: #3a7bd5; }
+.log-box .log-wait { color: #d4a820; }
+
+/* RIGHT PANEL */
+.right-panel {
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+.output-toolbar {
+background: var(–surface);
+border-bottom: 1.5px solid var(–border);
+padding: 10px 20px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.output-toolbar .tabs {
+display: flex;
+gap: 4px;
+background: var(–surface2);
+border-radius: 8px;
+padding: 3px;
+}
+
+.tab-btn {
+font-family: var(–mono);
+font-size: 11px;
+padding: 5px 14px;
+border-radius: 6px;
+border: none;
+background: transparent;
+color: var(–muted);
+cursor: pointer;
+font-weight: 500;
+letter-spacing: 0.04em;
+transition: all 0.15s;
+}
+
+.tab-btn.active {
+background: var(–surface);
+color: var(–text);
+box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+font-weight: 700;
+}
+
+.toolbar-actions {
+margin-left: auto;
+display: flex;
+gap: 8px;
+}
+
+.output-area {
+flex: 1;
+overflow: hidden;
+position: relative;
+}
+
+#preview-frame {
+width: 100%;
+height: 100%;
+border: none;
+display: block;
+background: white;
+}
+
+#code-view {
+display: none;
+width: 100%;
+height: 100%;
+background: #1a1a1f;
+color: #e0ddd6;
+font-family: var(–mono);
+font-size: 12px;
+padding: 20px;
+overflow: auto;
+line-height: 1.7;
+white-space: pre;
+tab-size: 2;
+}
+
+.empty-preview {
+position: absolute;
+inset: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 16px;
+color: var(–muted);
+pointer-events: none;
+}
+
+.empty-preview .big-icon {
+font-size: 64px;
+opacity: 0.3;
+}
+
+.empty-preview p {
+font-size: 14px;
+font-weight: 600;
+opacity: 0.5;
+}
+
+.empty-preview small {
+font-size: 12px;
+opacity: 0.4;
+}
+
+/* Spinner overlay */
+.spinner-overlay {
+display: none;
+position: absolute;
+inset: 0;
+background: rgba(247,245,240,0.88);
+z-index: 20;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 16px;
+}
+
+.spinner-overlay.active { display: flex; }
+
+.big-spinner {
+width: 52px;
+height: 52px;
+border: 4px solid var(–border);
+border-top-color: var(–accent);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+
+.spinner-msg {
+font-size: 14px;
+font-weight: 700;
+color: var(–text);
+}
+
+.spinner-sub {
+font-size: 12px;
+color: var(–muted);
+text-align: center;
+max-width: 280px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.model-row {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+}
+
+.model-row label {
+font-size: 11px;
+color: var(–muted);
+display: block;
+margin-bottom: 4px;
+font-family: var(–mono);
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="header-icon">📋</div>
+  <div class="header-text">
+    <h1>Worksheet → Web Page</h1>
+    <p>Upload a classroom worksheet and get a faithful HTML clone with AI-regenerated images</p>
+  </div>
+  <span class="header-badge">Powered by OpenAI</span>
+</header>
+
+<main>
+  <!-- LEFT: Controls -->
+  <div class="left-panel">
+
+```
+<div class="section-title">API Key</div>
+<div class="card">
+  <div class="card-label">OpenAI API Key</div>
+  <div class="key-row">
+    <input type="password" id="api-key" placeholder="sk-..." autocomplete="off" />
+    <button class="btn-secondary" onclick="saveKey()">Save</button>
+  </div>
+  <div id="key-status"></div>
+</div>
+
+<div class="section-title">Models</div>
+<div class="card">
+  <div class="card-hint">Vision model reads & interprets the worksheet. Image model recreates the illustrations.</div>
+  <div class="model-row">
+    <div>
+      <label>Vision / Layout</label>
+      <select id="vision-model">
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-4-turbo">gpt-4-turbo</option>
+      </select>
+    </div>
+    <div>
+      <label>Image Gen</label>
+      <select id="image-model">
+        <option value="dall-e-3">dall-e-3</option>
+        <option value="dall-e-2">dall-e-2</option>
+        <option value="gpt-image-1">gpt-image-1</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Worksheet</div>
+<div class="card">
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*,.pdf" onchange="handleFile(this)" />
+    <div class="upload-icon">🖼️</div>
+    <div class="upload-label">Drop worksheet here</div>
+    <div class="upload-sub">JPEG, PNG, or PDF · max 20MB</div>
+  </div>
+  <img id="preview-thumb" class="preview-thumb" alt="Preview" />
+  <div id="file-name" style="font-size:11px;color:var(--muted);font-family:var(--mono);display:none;"></div>
+</div>
+
+<div class="section-title">Options</div>
+<div class="card">
+  <div class="card-label">Additional instructions</div>
+  <textarea id="extra-instructions" placeholder="e.g. This is a Year 3 science worksheet. Keep the font child-friendly. Maintain the two-column layout."></textarea>
+</div>
+
+<button class="btn-primary" id="convert-btn" onclick="convert()" disabled>
+  ✦ Convert Worksheet
+</button>
+
+<div class="section-title">Progress</div>
+<div class="log-box" id="log-box">
+  <span class="log-line" style="color:#555">Waiting to start…</span>
+</div>
+```
+
+  </div>
+
+  <!-- RIGHT: Output -->
+
+  <div class="right-panel">
+    <div class="output-toolbar">
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-preview" onclick="switchTab('preview')">Preview</button>
+        <button class="tab-btn" id="tab-code" onclick="switchTab('code')">HTML Source</button>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-secondary" onclick="downloadHTML()" id="dl-btn" disabled>⬇ Download HTML</button>
+        <button class="btn-secondary" onclick="openInNewTab()" id="open-btn" disabled>↗ Open in Tab</button>
+      </div>
+    </div>
+
+```
+<div class="output-area">
+  <div class="empty-preview" id="empty-state">
+    <div class="big-icon">📄</div>
+    <p>Output will appear here</p>
+    <small>Upload a worksheet and click Convert</small>
+  </div>
+
+  <div class="spinner-overlay" id="spinner">
+    <div class="big-spinner"></div>
+    <div class="spinner-msg" id="spinner-msg">Analysing worksheet…</div>
+    <div class="spinner-sub" id="spinner-sub">This may take 30–60 seconds depending on complexity</div>
+  </div>
+
+  <iframe id="preview-frame" style="display:none"></iframe>
+  <div id="code-view"></div>
+</div>
+```
+
+  </div>
+</main>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+let fileBase64 = null;
+let fileMime = null;
+let generatedHTML = null;
+
+// ─── Key ────────────────────────────────────────────────────────────────────
+function saveKey() {
+  const v = document.getElementById('api-key').value.trim();
+  if (!v) return;
+  localStorage.setItem('ws_openai_key', v);
+  document.getElementById('api-key').value = '•'.repeat(Math.min(v.length, 24));
+  document.getElementById('key-status').innerHTML = '<span class="key-saved">Key saved</span>';
+  checkReady();
+}
+
+function getKey() {
+  return localStorage.getItem('ws_openai_key') || '';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (getKey()) {
+    document.getElementById('api-key').placeholder = '(saved)';
+    document.getElementById('key-status').innerHTML = '<span class="key-saved">Key loaded</span>';
+  }
+  checkReady();
+
+  // Drag and drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) processFile(f);
+  });
+});
+
+function checkReady() {
+  const hasKey = !!getKey();
+  const hasFile = !!fileBase64;
+  document.getElementById('convert-btn').disabled = !(hasKey && hasFile);
+}
+
+// ─── File handling ───────────────────────────────────────────────────────────
+function handleFile(input) {
+  if (input.files[0]) processFile(input.files[0]);
+}
+
+function processFile(file) {
+  const allowed = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
+  if (!allowed.includes(file.type)) {
+    alert('Please upload a JPEG, PNG, WebP, GIF, or PDF file.'); return;
+  }
+
+  fileMime = file.type;
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-name').style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    fileBase64 = e.target.result.split(',')[1];
+
+    // Show preview for images
+    if (file.type !== 'application/pdf') {
+      const thumb = document.getElementById('preview-thumb');
+      thumb.src = e.target.result;
+      thumb.style.display = 'block';
+    } else {
+      document.getElementById('preview-thumb').style.display = 'none';
+    }
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── Logging ─────────────────────────────────────────────────────────────────
+function log(msg, type = '') {
+  const box = document.getElementById('log-box');
+  const line = document.createElement('span');
+  line.className = `log-line log-${type}`;
+  line.textContent = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log-box').innerHTML = '';
+}
+
+function setSpinner(msg, sub = '') {
+  document.getElementById('spinner-msg').textContent = msg;
+  document.getElementById('spinner-sub').textContent = sub;
+  document.getElementById('spinner').classList.add('active');
+}
+
+function hideSpinner() {
+  document.getElementById('spinner').classList.remove('active');
+}
+
+// ─── Main convert flow ───────────────────────────────────────────────────────
+async function convert() {
+  const key = getKey();
+  if (!key || !fileBase64) return;
+
+  clearLog();
+  document.getElementById('convert-btn').disabled = true;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('preview-frame').style.display = 'none';
+  document.getElementById('code-view').style.display = 'none';
+  document.getElementById('dl-btn').disabled = true;
+  document.getElementById('open-btn').disabled = true;
+
+  const visionModel = document.getElementById('vision-model').value;
+  const imageModel = document.getElementById('image-model').value;
+  const extras = document.getElementById('extra-instructions').value.trim();
+
+  try {
+    // ── Step 1: Analyse the worksheet ──────────────────────────────────────
+    setSpinner('Step 1 of 3: Analysing worksheet…', 'Vision model is reading layout, text and images');
+    log('→ Sending worksheet to ' + visionModel + '…', 'info');
+
+    const analysisPrompt = `You are an expert at converting classroom worksheets into HTML/CSS web pages.
+
+Analyse this worksheet image carefully and return a detailed JSON object describing:
+1. The overall layout (columns, sections, title, header style)
+2. All text content (titles, instructions, labels, questions, answers)
+3. Every image/illustration present — describe each one in rich detail suitable for DALL-E image generation (subject, style, colours, composition)
+4. Colours used (background, borders, text colours)
+5. Any fill-in-the-blank boxes, checkboxes, or interactive elements
+
+Return ONLY valid JSON in this exact structure:
+{
+  "title": "worksheet title",
+  "subject": "e.g. Science / English / Maths",
+  "ageGroup": "e.g. Year 3 / Age 8-9",
+  "layout": "description of overall layout",
+  "backgroundColor": "#hex",
+  "accentColor": "#hex",
+  "fontStyle": "description e.g. child-friendly, handwritten, clean sans-serif",
+  "sections": [
+    {
+      "type": "header|text|image|question|table|fillblank|labeldiagram",
+      "content": "text content if applicable",
+      "imagePrompt": "detailed DALL-E prompt if this section contains an image",
+      "imageStyle": "illustration style e.g. 'flat cartoon', 'colourful diagram', 'realistic photo'",
+      "imagePosition": "left|right|center|top|bottom",
+      "imageSize": "small|medium|large",
+      "subSections": []
+    }
+  ],
+  "images": [
+    {
+      "id": "img1",
+      "description": "what the image shows",
+      "dallePrompt": "detailed generation prompt — be specific about style, colours, composition. End with: educational worksheet illustration, clean white background, child-friendly",
+      "size": "small|medium|large",
+      "position": "description of where it sits in the layout"
+    }
+  ]
+}
+${extras ? '\nAdditional context from user: ' + extras : ''}`;
+
+    const analysisResp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: visionModel,
+        max_tokens: 3000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: { url: `data:${fileMime};base64,${fileBase64}`, detail: 'high' }
+            },
+            { type: 'text', text: analysisPrompt }
+          ]
+        }]
+      })
+    });
+
+    const analysisData = await analysisResp.json();
+    if (!analysisResp.ok) throw new Error('Vision API: ' + (analysisData?.error?.message || JSON.stringify(analysisData)));
+
+    let analysisText = analysisData.choices[0].message.content;
+    // Strip markdown fences if present
+    analysisText = analysisText.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+
+    let analysis;
+    try {
+      analysis = JSON.parse(analysisText);
+    } catch(e) {
+      // Try to extract JSON from the response
+      const match = analysisText.match(/\{[\s\S]*\}/);
+      if (match) analysis = JSON.parse(match[0]);
+      else throw new Error('Could not parse worksheet analysis as JSON');
+    }
+
+    log('✓ Worksheet analysed: "' + (analysis.title || 'Untitled') + '"', 'ok');
+    log('  Subject: ' + (analysis.subject || '?') + ' | Age: ' + (analysis.ageGroup || '?'), '');
+    log('  Found ' + (analysis.images?.length || 0) + ' image(s) to regenerate', 'info');
+
+    // ── Step 2: Generate images ─────────────────────────────────────────────
+    const images = analysis.images || [];
+    const generatedImages = {};
+
+    if (images.length > 0) {
+      setSpinner(`Step 2 of 3: Generating ${images.length} image(s)…`, 'Creating worksheet illustrations with ' + imageModel);
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        log(`→ Generating image ${i+1}/${images.length}: ${img.description?.slice(0,50) || 'image'}…`, 'wait');
+
+        try {
+          const sizePx = imageModel === 'dall-e-2'
+            ? (img.size === 'large' ? '1024x1024' : img.size === 'medium' ? '512x512' : '256x256')
+            : '1024x1024';
+
+          const imgResp = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+              model: imageModel,
+              prompt: img.dallePrompt || img.description,
+              n: 1,
+              size: sizePx,
+              response_format: 'b64_json'
+            })
+          });
+
+          const imgData = await imgResp.json();
+          if (!imgResp.ok) throw new Error(imgData?.error?.message || 'Image gen failed');
+
+          generatedImages[img.id] = 'data:image/png;base64,' + imgData.data[0].b64_json;
+          log(`✓ Image ${i+1} generated`, 'ok');
+        } catch(imgErr) {
+          log(`✗ Image ${i+1} failed: ${imgErr.message}`, 'err');
+          generatedImages[img.id] = null;
+        }
+      }
+    } else {
+      log('  No images to generate — text-only worksheet', '');
+    }
+
+    // ── Step 3: Build HTML ──────────────────────────────────────────────────
+    setSpinner('Step 3 of 3: Building HTML page…', 'Assembling the final worksheet clone');
+    log('→ Generating HTML from analysis…', 'info');
+
+    // Embed generated images into the analysis object
+    const analysisWithImages = JSON.parse(JSON.stringify(analysis));
+    if (analysisWithImages.images) {
+      analysisWithImages.images = analysisWithImages.images.map(img => ({
+        ...img,
+        dataUrl: generatedImages[img.id] || null
+      }));
+    }
+
+    const htmlPrompt = `You are an expert HTML/CSS developer specialising in educational worksheets.
+
+Using the worksheet analysis below, generate a complete, self-contained HTML page that faithfully reproduces the worksheet.
+
+RULES:
+- Single HTML file with all CSS inline in <style> tags — no external dependencies except Google Fonts
+- Reproduce the EXACT layout, structure, and content from the analysis
+- Match the colour scheme, font style, and overall aesthetic
+- For each image entry that has a dataUrl, use that dataUrl as the src of an <img> tag
+- If an image has no dataUrl (null), use a styled placeholder div with the image description as text
+- Include all text, labels, questions, fill-in-the-blank boxes, instructions
+- Make fill-in-the-blank boxes into actual HTML input fields
+- Make it look like a real printed worksheet — clean, structured, professional
+- Add a subtle "Generated by Worksheet Converter" footer
+- The page should be print-ready (A4 proportions, good for @media print)
+- Use child-appropriate, friendly fonts from Google Fonts matching the original style
+- DO NOT add any content that wasn't in the original worksheet
+
+WORKSHEET ANALYSIS:
+${JSON.stringify(analysisWithImages, null, 2)}
+
+Return ONLY the complete HTML — no explanation, no markdown fences, just raw HTML starting with <!DOCTYPE html>`;
+
+    const htmlResp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: visionModel,
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: htmlPrompt }]
+      })
+    });
+
+    const htmlData = await htmlResp.json();
+    if (!htmlResp.ok) throw new Error('HTML gen API: ' + (htmlData?.error?.message || JSON.stringify(htmlData)));
+
+    let html = htmlData.choices[0].message.content;
+    html = html.replace(/^```html\n?/i, '').replace(/^```\n?/i, '').replace(/```\s*$/i, '').trim();
+
+    generatedHTML = html;
+    log('✓ HTML generated (' + Math.round(html.length / 1024) + 'KB)', 'ok');
+
+    // ── Render ──────────────────────────────────────────────────────────────
+    hideSpinner();
+
+    const frame = document.getElementById('preview-frame');
+    frame.style.display = 'block';
+    frame.srcdoc = html;
+
+    document.getElementById('code-view').textContent = html;
+
+    document.getElementById('dl-btn').disabled = false;
+    document.getElementById('open-btn').disabled = false;
+    document.getElementById('convert-btn').disabled = false;
+
+    log('✓ Done! Worksheet cloned successfully.', 'ok');
+
+  } catch(err) {
+    hideSpinner();
+    log('✗ Error: ' + err.message, 'err');
+    document.getElementById('convert-btn').disabled = false;
+    console.error(err);
+  }
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
+  document.getElementById('tab-code').classList.toggle('active', tab === 'code');
+  document.getElementById('preview-frame').style.display = tab === 'preview' && generatedHTML ? 'block' : 'none';
+  document.getElementById('code-view').style.display = tab === 'code' && generatedHTML ? 'block' : 'none';
+}
+
+// ─── Download / Open ─────────────────────────────────────────────────────────
+function downloadHTML() {
+  if (!generatedHTML) return;
+  const blob = new Blob([generatedHTML], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'worksheet-clone.html';
+  a.click();
+}
+
+function openInNewTab() {
+  if (!generatedHTML) return;
+  const blob = new Blob([generatedHTML], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+</script>
+
+</body>
+</html>
