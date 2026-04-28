@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,355 +8,469 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap');
 
-  :root {
-    --gemini-col: #1a73e8;
-    --gemini-light: #e8f0fe;
-    --gemini-dark: #0d47a1;
-    --openai-col: #10a37f;
-    --openai-light: #e6f4f1;
-    --openai-dark: #065f46;
-    --bg: #0f0f13;
-    --surface: #1a1a22;
-    --surface2: #22222e;
-    --border: #2e2e3e;
-    --text: #e8e8f0;
-    --muted: #888899;
-    --mono: 'Space Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-    --radius: 8px;
-  }
+:root {
+–gemini-col: #1a73e8;
+–gemini-light: #e8f0fe;
+–gemini-dark: #0d47a1;
+–openai-col: #10a37f;
+–openai-light: #e6f4f1;
+–openai-dark: #065f46;
+–bg: #0f0f13;
+–surface: #1a1a22;
+–surface2: #22222e;
+–border: #2e2e3e;
+–text: #e8e8f0;
+–muted: #888899;
+–mono: ‘Space Mono’, monospace;
+–sans: ‘DM Sans’, sans-serif;
+–radius: 8px;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+- { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+body {
+font-family: var(–sans);
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+}
 
-  header {
-    padding: 18px 32px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
+header {
+padding: 18px 32px;
+border-bottom: 1px solid var(–border);
+background: var(–surface);
+display: flex;
+align-items: center;
+gap: 14px;
+}
 
-  header .logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+header .logo {
+font-family: var(–mono);
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–muted);
+}
 
-  header h1 {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-  }
+header h1 {
+font-size: 15px;
+font-weight: 600;
+color: var(–text);
+}
 
-  header .pill {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    text-transform: uppercase;
-  }
+header .pill {
+margin-left: auto;
+font-family: var(–mono);
+font-size: 10px;
+letter-spacing: 0.08em;
+padding: 4px 10px;
+border-radius: 20px;
+background: var(–surface2);
+border: 1px solid var(–border);
+color: var(–muted);
+text-transform: uppercase;
+}
 
-  .panels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    flex: 1;
-    gap: 0;
-    min-height: 0;
-  }
+.panels {
+display: grid;
+grid-template-columns: 1fr 1fr;
+flex: 1;
+gap: 0;
+min-height: 0;
+}
 
-  .divider {
-    position: fixed;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 1px;
-    background: var(--border);
-    z-index: 10;
-    transform: translateX(-0.5px);
-  }
+.divider {
+position: fixed;
+left: 50%;
+top: 0;
+bottom: 0;
+width: 1px;
+background: var(–border);
+z-index: 10;
+transform: translateX(-0.5px);
+}
 
-  .panel {
-    padding: 28px 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
-  }
+.panel {
+padding: 28px 32px;
+display: flex;
+flex-direction: column;
+gap: 20px;
+overflow-y: auto;
+}
 
-  .panel-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+.panel-header {
+display: flex;
+align-items: center;
+gap: 12px;
+}
 
-  .panel-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-  }
+.panel-icon {
+width: 32px;
+height: 32px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+}
 
-  .gemini .panel-icon { background: var(--gemini-light); }
-  .openai .panel-icon { background: var(--openai-light); }
+.gemini .panel-icon { background: var(–gemini-light); }
+.openai .panel-icon { background: var(–openai-light); }
 
-  .panel-title {
-    font-size: 17px;
-    font-weight: 600;
-  }
+.panel-title {
+font-size: 17px;
+font-weight: 600;
+}
 
-  .gemini .panel-title { color: #6ba4ff; }
-  .openai .panel-title { color: #34d399; }
+.gemini .panel-title { color: #6ba4ff; }
+.openai .panel-title { color: #34d399; }
 
-  .panel-subtitle {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: var(--mono);
-    margin-top: 1px;
-  }
+.panel-subtitle {
+font-size: 12px;
+color: var(–muted);
+font-family: var(–mono);
+margin-top: 1px;
+}
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 18px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
 
-  .card-label {
-    font-size: 11px;
-    font-family: var(--mono);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+.card-label {
+font-size: 11px;
+font-family: var(–mono);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–muted);
+}
 
-  .input-row {
-    display: flex;
-    gap: 8px;
-  }
+.input-row {
+display: flex;
+gap: 8px;
+}
 
-  input[type="text"], input[type="password"], textarea {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    resize: vertical;
-  }
+input[type=“text”], input[type=“password”], textarea {
+flex: 1;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+color: var(–text);
+font-family: var(–mono);
+font-size: 12px;
+padding: 10px 14px;
+outline: none;
+transition: border-color 0.2s;
+resize: vertical;
+}
 
-  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
-    border-color: var(--muted);
-  }
+input[type=“text”]:focus, input[type=“password”]:focus, textarea:focus {
+border-color: var(–muted);
+}
 
-  .gemini input:focus, .gemini textarea:focus { border-color: var(--gemini-col); }
-  .openai input:focus, .openai textarea:focus { border-color: var(--openai-col); }
+.gemini input:focus, .gemini textarea:focus { border-color: var(–gemini-col); }
+.openai input:focus, .openai textarea:focus { border-color: var(–openai-col); }
 
-  textarea {
-    min-height: 100px;
-    line-height: 1.6;
-  }
+textarea {
+min-height: 100px;
+line-height: 1.6;
+}
 
-  button {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 10px 16px;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-    font-weight: 700;
-  }
+button {
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+padding: 10px 16px;
+border: none;
+border-radius: var(–radius);
+cursor: pointer;
+transition: all 0.15s;
+white-space: nowrap;
+font-weight: 700;
+}
 
-  .btn-save {
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-save:hover { color: var(--text); border-color: var(--muted); }
+.btn-save {
+background: var(–surface2);
+color: var(–muted);
+border: 1px solid var(–border);
+}
+.btn-save:hover { color: var(–text); border-color: var(–muted); }
 
-  .gemini .btn-run {
-    background: var(--gemini-col);
-    color: #fff;
-  }
-  .gemini .btn-run:hover { background: var(--gemini-dark); }
+.btn-list {
+background: var(–surface2);
+color: var(–muted);
+border: 1px solid var(–border);
+}
+.btn-list:hover { color: var(–text); border-color: var(–muted); }
+.btn-list:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .openai .btn-run {
-    background: var(--openai-col);
-    color: #fff;
-  }
-  .openai .btn-run:hover { background: var(--openai-dark); }
+.model-list-box {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+max-height: 220px;
+overflow-y: auto;
+font-family: var(–mono);
+font-size: 11px;
+}
 
-  .btn-run:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+.model-list-box .mlb-header {
+padding: 8px 14px;
+border-bottom: 1px solid var(–border);
+color: var(–muted);
+font-size: 10px;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+display: flex;
+align-items: center;
+justify-content: space-between;
+position: sticky;
+top: 0;
+background: var(–surface2);
+}
 
-  .prompt-row {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-  }
+.model-list-box .mlb-header button {
+font-size: 9px;
+padding: 3px 8px;
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+border-radius: 4px;
+cursor: pointer;
+text-transform: uppercase;
+letter-spacing: 0.06em;
+}
+.model-list-box .mlb-header button:hover { color: var(–text); border-color: var(–muted); }
 
-  .prompt-row input {
-    flex: 1;
-  }
+.model-list-item {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 7px 14px;
+border-bottom: 1px solid #1e1e2a;
+cursor: pointer;
+transition: background 0.1s;
+}
+.model-list-item:last-child { border-bottom: none; }
+.model-list-item:hover { background: #2a2a38; }
 
-  .results-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+.model-list-item input[type=“checkbox”] {
+width: 13px;
+height: 13px;
+accent-color: var(–gemini-col);
+cursor: pointer;
+flex-shrink: 0;
+padding: 0;
+border-radius: 3px;
+background: var(–surface2);
+border: 1px solid var(–border);
+}
 
-  .result-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color 0.3s;
-  }
+.openai .model-list-item input[type=“checkbox”] { accent-color: var(–openai-col); }
 
-  .result-card.success { border-color: #10a37f55; }
-  .result-card.error { border-color: #ef444455; }
-  .result-card.loading { border-color: #6b7eff55; }
+.model-list-item .mli-name {
+flex: 1;
+color: var(–text);
+font-size: 11px;
+}
 
-  .result-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-  }
+.model-list-item .mli-tag {
+font-size: 9px;
+padding: 2px 6px;
+border-radius: 3px;
+background: #6b7eff22;
+color: #6b7eff;
+letter-spacing: 0.05em;
+}
 
-  .result-model {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 700;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.mli-tag.image { background: #10a37f22; color: #10a37f; }
+.mli-tag.chat  { background: #f59e0b22; color: #f59e0b; }
+.mli-tag.embed { background: #88889922; color: #888899; }
 
-  .result-status {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
+.mlb-loading {
+padding: 20px;
+text-align: center;
+color: var(–muted);
+font-size: 11px;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+}
 
-  .status-loading { background: #6b7eff22; color: #6b7eff; }
-  .status-success { background: #10a37f22; color: #10a37f; }
-  .status-error { background: #ef444422; color: #ef4444; }
-  .status-text { background: #f59e0b22; color: #f59e0b; }
+.mlb-error {
+padding: 14px;
+color: #ef4444;
+font-size: 11px;
+line-height: 1.5;
+}
 
-  .result-body {
-    padding: 14px 16px;
-  }
+.use-selected-btn {
+align-self: flex-end;
+}
 
-  .result-body img {
-    max-width: 100%;
-    border-radius: 4px;
-    display: block;
-  }
+.gemini .btn-run {
+background: var(–gemini-col);
+color: #fff;
+}
+.gemini .btn-run:hover { background: var(–gemini-dark); }
 
-  .result-body .error-msg {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: #ef4444;
-    line-height: 1.6;
-    word-break: break-all;
-  }
+.openai .btn-run {
+background: var(–openai-col);
+color: #fff;
+}
+.openai .btn-run:hover { background: var(–openai-dark); }
 
-  .result-body .text-response {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.6;
-    font-style: italic;
-  }
+.btn-run:disabled {
+opacity: 0.4;
+cursor: not-allowed;
+}
 
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: #6b7eff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+.prompt-row {
+display: flex;
+gap: 8px;
+align-items: flex-end;
+}
 
-  @keyframes spin { to { transform: rotate(360deg); } }
+.prompt-row input {
+flex: 1;
+}
 
-  .key-saved {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: #10a37f;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+.results-grid {
+display: flex;
+flex-direction: column;
+gap: 14px;
+}
 
-  .key-saved::before {
-    content: '✓';
-    font-weight: 700;
-  }
+.result-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+overflow: hidden;
+transition: border-color 0.3s;
+}
 
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 13px;
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-  }
+.result-card.success { border-color: #10a37f55; }
+.result-card.error { border-color: #ef444455; }
+.result-card.loading { border-color: #6b7eff55; }
 
-  .empty-state .icon { font-size: 28px; margin-bottom: 10px; }
+.result-header {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 12px 16px;
+background: var(–surface2);
+border-bottom: 1px solid var(–border);
+}
 
-  .note {
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--surface2);
-    border-left: 3px solid var(--border);
-    padding: 10px 14px;
-    border-radius: 0 var(--radius) var(--radius) 0;
-    line-height: 1.6;
-  }
+.result-model {
+font-family: var(–mono);
+font-size: 12px;
+font-weight: 700;
+flex: 1;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
 
-  .note strong { color: #f59e0b; }
+.result-status {
+font-family: var(–mono);
+font-size: 10px;
+padding: 3px 8px;
+border-radius: 4px;
+text-transform: uppercase;
+letter-spacing: 0.06em;
+}
+
+.status-loading { background: #6b7eff22; color: #6b7eff; }
+.status-success { background: #10a37f22; color: #10a37f; }
+.status-error { background: #ef444422; color: #ef4444; }
+.status-text { background: #f59e0b22; color: #f59e0b; }
+
+.result-body {
+padding: 14px 16px;
+}
+
+.result-body img {
+max-width: 100%;
+border-radius: 4px;
+display: block;
+}
+
+.result-body .error-msg {
+font-family: var(–mono);
+font-size: 11px;
+color: #ef4444;
+line-height: 1.6;
+word-break: break-all;
+}
+
+.result-body .text-response {
+font-size: 13px;
+color: var(–muted);
+line-height: 1.6;
+font-style: italic;
+}
+
+.spinner {
+display: inline-block;
+width: 14px;
+height: 14px;
+border: 2px solid var(–border);
+border-top-color: #6b7eff;
+border-radius: 50%;
+animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.key-saved {
+font-family: var(–mono);
+font-size: 10px;
+color: #10a37f;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.key-saved::before {
+content: ‘✓’;
+font-weight: 700;
+}
+
+.empty-state {
+text-align: center;
+padding: 40px 20px;
+color: var(–muted);
+font-size: 13px;
+border: 1px dashed var(–border);
+border-radius: var(–radius);
+}
+
+.empty-state .icon { font-size: 28px; margin-bottom: 10px; }
+
+.note {
+font-size: 11px;
+color: var(–muted);
+background: var(–surface2);
+border-left: 3px solid var(–border);
+padding: 10px 14px;
+border-radius: 0 var(–radius) var(–radius) 0;
+line-height: 1.6;
+}
+
+.note strong { color: #f59e0b; }
 </style>
+
 </head>
 <body>
 
@@ -370,6 +485,7 @@
 <div class="panels">
 
   <!-- GEMINI PANEL -->
+
   <div class="panel gemini">
     <div class="panel-header">
       <div class="panel-icon">✦</div>
@@ -379,38 +495,56 @@
       </div>
     </div>
 
-    <div class="note">
-      <strong>Note:</strong> Gemini image generation uses <code>imagen-3.0-generate-*</code> models via the <code>generateImage</code> endpoint. Standard chat models (gemini-pro, gemini-flash) do <em>not</em> return images.
-    </div>
+```
+<div class="note">
+  <strong>Note:</strong> Gemini image generation uses <code>imagen-3.0-generate-*</code> models via the <code>generateImage</code> endpoint. Standard chat models (gemini-pro, gemini-flash) do <em>not</em> return images.
+</div>
 
-    <div class="card">
-      <div class="card-label">API Key</div>
-      <div class="input-row">
-        <input type="password" id="gemini-key" placeholder="AIza..." autocomplete="off" />
-        <button class="btn-save" onclick="saveKey('gemini')">Save</button>
-      </div>
-      <div id="gemini-key-status"></div>
-    </div>
+<div class="card">
+  <div class="card-label">API Key</div>
+  <div class="input-row">
+    <input type="password" id="gemini-key" placeholder="AIza..." autocomplete="off" />
+    <button class="btn-save" onclick="saveKey('gemini')">Save</button>
+  </div>
+  <div id="gemini-key-status"></div>
+</div>
 
-    <div class="card">
-      <div class="card-label">Models to test — one per line</div>
-      <textarea id="gemini-models" placeholder="imagen-3.0-generate-002&#10;gemini-2.0-flash-exp&#10;gemini-1.5-pro"></textarea>
+<div class="card">
+  <div class="card-label">Available Models</div>
+  <div class="input-row">
+    <button class="btn-list" id="gemini-list-btn" onclick="listModels('gemini')">⟳ Fetch Model List</button>
+  </div>
+  <div id="gemini-model-list-box" style="display:none" class="model-list-box">
+    <div class="mlb-header">
+      <span id="gemini-model-count">0 models</span>
+      <button onclick="useSelected('gemini')">Use selected →</button>
     </div>
+    <div id="gemini-model-items"></div>
+  </div>
+</div>
 
-    <div class="card">
-      <div class="card-label">Prompt</div>
-      <div class="prompt-row">
-        <input type="text" id="gemini-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
-        <button class="btn-run gemini" id="gemini-run" onclick="runGemini()">Run All</button>
-      </div>
-    </div>
+<div class="card">
+  <div class="card-label">Models to test — one per line</div>
+  <textarea id="gemini-models" placeholder="imagen-3.0-generate-002&#10;gemini-2.0-flash-exp&#10;gemini-1.5-pro"></textarea>
+</div>
 
-    <div class="results-grid" id="gemini-results">
-      <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
-    </div>
+<div class="card">
+  <div class="card-label">Prompt</div>
+  <div class="prompt-row">
+    <input type="text" id="gemini-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
+    <button class="btn-run gemini" id="gemini-run" onclick="runGemini()">Run All</button>
+  </div>
+</div>
+
+<div class="results-grid" id="gemini-results">
+  <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
+</div>
+```
+
   </div>
 
   <!-- OPENAI PANEL -->
+
   <div class="panel openai">
     <div class="panel-header">
       <div class="panel-icon">◈</div>
@@ -420,35 +554,52 @@
       </div>
     </div>
 
-    <div class="note">
-      <strong>Note:</strong> Only <code>dall-e-3</code> and <code>dall-e-2</code> generate images. GPT models will return a text description instead. The page auto-routes to the correct endpoint based on model name.
-    </div>
+```
+<div class="note">
+  <strong>Note:</strong> Only <code>dall-e-3</code> and <code>dall-e-2</code> generate images. GPT models will return a text description instead. The page auto-routes to the correct endpoint based on model name.
+</div>
 
-    <div class="card">
-      <div class="card-label">API Key</div>
-      <div class="input-row">
-        <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off" />
-        <button class="btn-save" onclick="saveKey('openai')">Save</button>
-      </div>
-      <div id="openai-key-status"></div>
-    </div>
+<div class="card">
+  <div class="card-label">API Key</div>
+  <div class="input-row">
+    <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off" />
+    <button class="btn-save" onclick="saveKey('openai')">Save</button>
+  </div>
+  <div id="openai-key-status"></div>
+</div>
 
-    <div class="card">
-      <div class="card-label">Models to test — one per line</div>
-      <textarea id="openai-models" placeholder="dall-e-3&#10;dall-e-2&#10;gpt-4o&#10;gpt-4-vision-preview"></textarea>
+<div class="card">
+  <div class="card-label">Available Models</div>
+  <div class="input-row">
+    <button class="btn-list" id="openai-list-btn" onclick="listModels('openai')">⟳ Fetch Model List</button>
+  </div>
+  <div id="openai-model-list-box" style="display:none" class="model-list-box">
+    <div class="mlb-header">
+      <span id="openai-model-count">0 models</span>
+      <button onclick="useSelected('openai')">Use selected →</button>
     </div>
+    <div id="openai-model-items"></div>
+  </div>
+</div>
 
-    <div class="card">
-      <div class="card-label">Prompt</div>
-      <div class="prompt-row">
-        <input type="text" id="openai-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
-        <button class="btn-run openai" id="openai-run" onclick="runOpenAI()">Run All</button>
-      </div>
-    </div>
+<div class="card">
+  <div class="card-label">Models to test — one per line</div>
+  <textarea id="openai-models" placeholder="dall-e-3&#10;dall-e-2&#10;gpt-4o&#10;gpt-4-vision-preview"></textarea>
+</div>
 
-    <div class="results-grid" id="openai-results">
-      <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
-    </div>
+<div class="card">
+  <div class="card-label">Prompt</div>
+  <div class="prompt-row">
+    <input type="text" id="openai-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
+    <button class="btn-run openai" id="openai-run" onclick="runOpenAI()">Run All</button>
+  </div>
+</div>
+
+<div class="results-grid" id="openai-results">
+  <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
+</div>
+```
+
   </div>
 
 </div>
@@ -711,5 +862,6 @@ async function testOpenAIModel(key, model, prompt) {
   }
 }
 </script>
+
 </body>
 </html>
