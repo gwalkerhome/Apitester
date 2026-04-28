@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Generation API Tester</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --gemini-col: #1a73e8;
+    --gemini-light: #e8f0fe;
+    --gemini-dark: #0d47a1;
+    --openai-col: #10a37f;
+    --openai-light: #e6f4f1;
+    --openai-dark: #065f46;
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222e;
+    --border: #2e2e3e;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  header .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  header .pill {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    gap: 0;
+    min-height: 0;
+  }
+
+  .divider {
+    position: fixed;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+    z-index: 10;
+    transform: translateX(-0.5px);
+  }
+
+  .panel {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .panel-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .gemini .panel-icon { background: var(--gemini-light); }
+  .openai .panel-icon { background: var(--openai-light); }
+
+  .panel-title {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .gemini .panel-title { color: #6ba4ff; }
+  .openai .panel-title { color: #34d399; }
+
+  .panel-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-top: 1px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  input[type="text"], input[type="password"], textarea {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    border-color: var(--muted);
+  }
+
+  .gemini input:focus, .gemini textarea:focus { border-color: var(--gemini-col); }
+  .openai input:focus, .openai textarea:focus { border-color: var(--openai-col); }
+
+  textarea {
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  button {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  .btn-save {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-save:hover { color: var(--text); border-color: var(--muted); }
+
+  .gemini .btn-run {
+    background: var(--gemini-col);
+    color: #fff;
+  }
+  .gemini .btn-run:hover { background: var(--gemini-dark); }
+
+  .openai .btn-run {
+    background: var(--openai-col);
+    color: #fff;
+  }
+  .openai .btn-run:hover { background: var(--openai-dark); }
+
+  .btn-run:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .prompt-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .prompt-row input {
+    flex: 1;
+  }
+
+  .results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .result-card.success { border-color: #10a37f55; }
+  .result-card.error { border-color: #ef444455; }
+  .result-card.loading { border-color: #6b7eff55; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-model {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .result-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .status-loading { background: #6b7eff22; color: #6b7eff; }
+  .status-success { background: #10a37f22; color: #10a37f; }
+  .status-error { background: #ef444422; color: #ef4444; }
+  .status-text { background: #f59e0b22; color: #f59e0b; }
+
+  .result-body {
+    padding: 14px 16px;
+  }
+
+  .result-body img {
+    max-width: 100%;
+    border-radius: 4px;
+    display: block;
+  }
+
+  .result-body .error-msg {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #ef4444;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+
+  .result-body .text-response {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: #6b7eff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .key-saved {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #10a37f;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .key-saved::before {
+    content: '✓';
+    font-weight: 700;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  .empty-state .icon { font-size: 28px; margin-bottom: 10px; }
+
+  .note {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border-left: 3px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    line-height: 1.6;
+  }
+
+  .note strong { color: #f59e0b; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">API Lab</span>
+  <h1>Image Generation Tester</h1>
+  <span class="pill">Multi-model</span>
+</header>
+
+<div class="divider"></div>
+
+<div class="panels">
+
+  <!-- GEMINI PANEL -->
+  <div class="panel gemini">
+    <div class="panel-header">
+      <div class="panel-icon">✦</div>
+      <div>
+        <div class="panel-title">Google Gemini</div>
+        <div class="panel-subtitle">generativelanguage.googleapis.com</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Note:</strong> Gemini image generation uses <code>imagen-3.0-generate-*</code> models via the <code>generateImage</code> endpoint. Standard chat models (gemini-pro, gemini-flash) do <em>not</em> return images.
+    </div>
+
+    <div class="card">
+      <div class="card-label">API Key</div>
+      <div class="input-row">
+        <input type="password" id="gemini-key" placeholder="AIza..." autocomplete="off" />
+        <button class="btn-save" onclick="saveKey('gemini')">Save</button>
+      </div>
+      <div id="gemini-key-status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Models to test — one per line</div>
+      <textarea id="gemini-models" placeholder="imagen-3.0-generate-002&#10;gemini-2.0-flash-exp&#10;gemini-1.5-pro"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Prompt</div>
+      <div class="prompt-row">
+        <input type="text" id="gemini-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
+        <button class="btn-run gemini" id="gemini-run" onclick="runGemini()">Run All</button>
+      </div>
+    </div>
+
+    <div class="results-grid" id="gemini-results">
+      <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
+    </div>
+  </div>
+
+  <!-- OPENAI PANEL -->
+  <div class="panel openai">
+    <div class="panel-header">
+      <div class="panel-icon">◈</div>
+      <div>
+        <div class="panel-title">OpenAI</div>
+        <div class="panel-subtitle">api.openai.com</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Note:</strong> Only <code>dall-e-3</code> and <code>dall-e-2</code> generate images. GPT models will return a text description instead. The page auto-routes to the correct endpoint based on model name.
+    </div>
+
+    <div class="card">
+      <div class="card-label">API Key</div>
+      <div class="input-row">
+        <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off" />
+        <button class="btn-save" onclick="saveKey('openai')">Save</button>
+      </div>
+      <div id="openai-key-status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Models to test — one per line</div>
+      <textarea id="openai-models" placeholder="dall-e-3&#10;dall-e-2&#10;gpt-4o&#10;gpt-4-vision-preview"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Prompt</div>
+      <div class="prompt-row">
+        <input type="text" id="openai-prompt" value="A photorealistic image of a fluffy orange cat sitting on a windowsill" />
+        <button class="btn-run openai" id="openai-run" onclick="runOpenAI()">Run All</button>
+      </div>
+    </div>
+
+    <div class="results-grid" id="openai-results">
+      <div class="empty-state"><div class="icon">🖼️</div>Results will appear here</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Key storage ───────────────────────────────────────────────────────────
+function saveKey(provider) {
+  const val = document.getElementById(`${provider}-key`).value.trim();
+  if (!val) return;
+  localStorage.setItem(`imgtest_${provider}_key`, val);
+  document.getElementById(`${provider}-key`).value = '•'.repeat(Math.min(val.length, 24));
+  document.getElementById(`${provider}-key-status`).innerHTML =
+    `<span class="key-saved">Key saved to localStorage</span>`;
+}
+
+function getKey(provider) {
+  return localStorage.getItem(`imgtest_${provider}_key`) || '';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  ['gemini', 'openai'].forEach(p => {
+    const k = getKey(p);
+    if (k) {
+      document.getElementById(`${p}-key`).placeholder = '(saved) ' + '•'.repeat(12);
+      document.getElementById(`${p}-key-status`).innerHTML =
+        `<span class="key-saved">Key loaded from localStorage</span>`;
+    }
+  });
+});
+
+// ─── Result card helpers ────────────────────────────────────────────────────
+function createResultCard(containerId, model) {
+  const grid = document.getElementById(containerId);
+  // Remove empty state
+  const empty = grid.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  const card = document.createElement('div');
+  card.className = 'result-card loading';
+  card.id = `result-${containerId}-${model.replace(/[^a-z0-9]/gi,'-')}`;
+  card.innerHTML = `
+    <div class="result-header">
+      <span class="result-model">${model}</span>
+      <span class="result-status status-loading"><span class="spinner"></span>&nbsp;Requesting…</span>
+    </div>
+    <div class="result-body"><span style="color:var(--muted);font-size:12px;font-family:var(--mono)">Waiting for response…</span></div>
+  `;
+  grid.appendChild(card);
+  return card;
+}
+
+function updateCard(card, status, content) {
+  card.className = `result-card ${status}`;
+  const header = card.querySelector('.result-header');
+  const body = card.querySelector('.result-body');
+
+  const statusMap = {
+    success: `<span class="result-status status-success">✓ Image</span>`,
+    error:   `<span class="result-status status-error">✗ Error</span>`,
+    text:    `<span class="result-status status-text">~ Text only</span>`,
+  };
+
+  const model = header.querySelector('.result-model').textContent;
+  header.innerHTML = `<span class="result-model">${model}</span>${statusMap[status] || ''}`;
+
+  if (status === 'success') {
+    body.innerHTML = `<img src="${content}" alt="Generated image" />`;
+  } else if (status === 'error') {
+    body.innerHTML = `<div class="error-msg">${escHtml(content)}</div>`;
+  } else {
+    body.innerHTML = `<div class="text-response">${escHtml(content)}</div>`;
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── GEMINI ─────────────────────────────────────────────────────────────────
+async function runGemini() {
+  const key = getKey('gemini') || document.getElementById('gemini-key').value.trim();
+  if (!key) { alert('Please enter and save your Gemini API key first.'); return; }
+
+  const models = document.getElementById('gemini-models').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  if (!models.length) { alert('Please enter at least one model name.'); return; }
+
+  const prompt = document.getElementById('gemini-prompt').value.trim() ||
+    'A photorealistic image of a fluffy orange cat';
+
+  document.getElementById('gemini-results').innerHTML = '';
+  document.getElementById('gemini-run').disabled = true;
+
+  await Promise.all(models.map(model => testGeminiModel(key, model, prompt)));
+  document.getElementById('gemini-run').disabled = false;
+}
+
+async function testGeminiModel(key, model, prompt) {
+  const card = createResultCard('gemini-results', model);
+
+  // Imagen models use generateImage endpoint
+  const isImagen = model.toLowerCase().includes('imagen');
+
+  try {
+    let url, body;
+
+    if (isImagen) {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateImage?key=${key}`;
+      body = {
+        prompt: { text: prompt },
+        number_of_images: 1,
+        safety_filter_level: "BLOCK_ONLY_HIGH",
+        person_generation: "ALLOW_ADULT"
+      };
+    } else {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      body = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+      };
+    }
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      const msg = data?.error?.message || JSON.stringify(data);
+      updateCard(card, 'error', `HTTP ${resp.status}: ${msg}`);
+      return;
+    }
+
+    // Try to find image in response
+    if (isImagen) {
+      const imgData = data?.generatedImages?.[0]?.image?.imageBytes;
+      if (imgData) {
+        updateCard(card, 'success', `data:image/png;base64,${imgData}`);
+        return;
+      }
+    } else {
+      // Check generateContent response for inline image data
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      for (const part of parts) {
+        if (part.inlineData?.mimeType?.startsWith('image/')) {
+          updateCard(card, 'success', `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`);
+          return;
+        }
+      }
+      // Fell through — text only
+      const textPart = parts.find(p => p.text);
+      if (textPart) {
+        updateCard(card, 'text', `This model returned text, not an image:\n"${textPart.text.slice(0,300)}…"`);
+        return;
+      }
+    }
+
+    updateCard(card, 'error', 'No image or text found in response:\n' + JSON.stringify(data, null, 2).slice(0, 500));
+
+  } catch (err) {
+    updateCard(card, 'error', err.message || String(err));
+  }
+}
+
+// ─── OPENAI ─────────────────────────────────────────────────────────────────
+async function runOpenAI() {
+  const key = getKey('openai') || document.getElementById('openai-key').value.trim();
+  if (!key) { alert('Please enter and save your OpenAI API key first.'); return; }
+
+  const models = document.getElementById('openai-models').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  if (!models.length) { alert('Please enter at least one model name.'); return; }
+
+  const prompt = document.getElementById('openai-prompt').value.trim() ||
+    'A photorealistic image of a fluffy orange cat';
+
+  document.getElementById('openai-results').innerHTML = '';
+  document.getElementById('openai-run').disabled = true;
+
+  await Promise.all(models.map(model => testOpenAIModel(key, model, prompt)));
+  document.getElementById('openai-run').disabled = false;
+}
+
+async function testOpenAIModel(key, model, prompt) {
+  const card = createResultCard('openai-results', model);
+  const isDalle = model.toLowerCase().includes('dall-e') || model.toLowerCase().includes('dalle');
+
+  try {
+    let url, body, resp, data;
+
+    if (isDalle) {
+      // Image generation endpoint
+      url = 'https://api.openai.com/v1/images/generations';
+      body = { model, prompt, n: 1, size: '1024x1024', response_format: 'url' };
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify(body)
+      });
+      data = await resp.json();
+
+      if (!resp.ok) {
+        const msg = data?.error?.message || JSON.stringify(data);
+        updateCard(card, 'error', `HTTP ${resp.status}: ${msg}`);
+        return;
+      }
+
+      const imageUrl = data?.data?.[0]?.url;
+      if (imageUrl) {
+        updateCard(card, 'success', imageUrl);
+      } else {
+        updateCard(card, 'error', 'No image URL in response:\n' + JSON.stringify(data, null, 2).slice(0, 400));
+      }
+
+    } else {
+      // Chat completions — GPT models won't return images but let's try
+      url = 'https://api.openai.com/v1/chat/completions';
+      body = {
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300
+      };
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify(body)
+      });
+      data = await resp.json();
+
+      if (!resp.ok) {
+        const msg = data?.error?.message || JSON.stringify(data);
+        updateCard(card, 'error', `HTTP ${resp.status}: ${msg}`);
+        return;
+      }
+
+      // Check for image in response (unlikely for GPT but worth checking)
+      const content = data?.choices?.[0]?.message?.content;
+      if (typeof content === 'string') {
+        updateCard(card, 'text', `Text model — returned text, not an image:\n"${content.slice(0, 400)}"`);
+      } else if (Array.isArray(content)) {
+        // Multi-modal response
+        for (const part of content) {
+          if (part.type === 'image_url') {
+            updateCard(card, 'success', part.image_url.url);
+            return;
+          }
+        }
+        const textPart = content.find(p => p.type === 'text');
+        updateCard(card, 'text', textPart?.text?.slice(0, 400) || JSON.stringify(content).slice(0, 400));
+      } else {
+        updateCard(card, 'error', 'Unexpected response format:\n' + JSON.stringify(data, null, 2).slice(0, 400));
+      }
+    }
+
+  } catch (err) {
+    updateCard(card, 'error', err.message || String(err));
+  }
+}
+</script>
+</body>
+</html>
